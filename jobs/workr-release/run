@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export $(xargs < "../../workr-release.env")
+
+function main {
+    clone-repository
+    run-release
+}
+
+function clone-repository {
+    log "Cloning repository..."
+    if [ -d "./workr-git" ]; then
+        (cd ./workr-git && git pull)
+    else
+        git clone https://github.com/sirikon/workr.git ./workr-git
+    fi
+    log ""
+}
+
+function run-release {
+    log "Running release..."
+    (cd ./workr-git && ./scripts/release)
+}
+
+function log {
+    printf "## %s\n" "$1"
+}
+
+main "$@"
