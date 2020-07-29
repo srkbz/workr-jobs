@@ -6,6 +6,12 @@ export $(xargs < "../../workr-release.env")
 function main {
     clone-repository
     run-release
+    show-latest-deb-download-link
+}
+
+function show-latest-deb-download-link {
+    download_link=$(curl -sq "https://api.github.com/repos/sirikon/workr/releases/latest" | jq -r '.assets[0].browser_download_url')
+    printf "%s\n" "Download link:" "${download_link}"
 }
 
 function clone-repository {
@@ -15,16 +21,21 @@ function clone-repository {
     else
         git clone https://github.com/sirikon/workr.git ./workr-git
     fi
-    log ""
+    new-line
 }
 
 function run-release {
     log "Running release..."
     (cd ./workr-git && ./scripts/release)
+    new-line
 }
 
 function log {
     printf "## %s\n" "$1"
+}
+
+function new-line {
+    printf "\n"
 }
 
 main "$@"
