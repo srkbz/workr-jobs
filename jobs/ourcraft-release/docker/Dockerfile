@@ -10,6 +10,7 @@ COPY ./scripts ./scripts
 COPY ./shard.yml .
 COPY ./shard.lock .
 RUN ./scripts/install-dependencies
+COPY ./spa ./spa
 COPY ./src ./src
 COPY ./spec ./spec
 RUN ./scripts/build static
