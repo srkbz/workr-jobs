@@ -1,0 +1,8 @@
+Package: ${PACKAGE}
+Version: ${VERSION}
+Section: base
+Priority: optional
+Architecture: amd64
+Maintainer: Carlos Fdez. Llamas <hello@sirikon.me>
+Description: ${PACKAGE}
+ ${WEB}

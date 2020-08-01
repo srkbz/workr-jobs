@@ -1,41 +1,32 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export $(xargs < "../../workr-release.env")
+export "$(xargs < "../../workr-release.env")"
+source "../../scripts.sh"
 
-function main {
-    clone-repository
-    run-release
-    show-latest-deb-download-link
-}
+rm -rf ./out
+clone-git-repository "https://github.com/sirikon/workr.git" "./workr-git"
+(
+    cd "./docker"
+    docker-compose up --build builder
+    docker cp "$(docker-compose ps -q builder)":/builder/out "../out"
+)
+log-newline
 
-function show-latest-deb-download-link {
-    download_link=$(curl -sq "https://api.github.com/repos/sirikon/workr/releases/latest" | jq -r '.assets[0].browser_download_url')
-    printf "%s\n" "Download link:" "${download_link}"
-}
+version="$(cat ./out/version)"
+package-tar "./out/bin" "./out/workr-${version}-linux-amd64.tar.gz"
+package-deb "./out/bin" "./out/workr-${version}-linux-amd64.deb" \
+    "workr" \
+    "${version}" \
+    "https://github.com/sirikon/workr"
 
-function clone-repository {
-    log "Cloning repository..."
-    if [ -d "./workr-git" ]; then
-        (cd ./workr-git && git pull)
-    else
-        git clone https://github.com/sirikon/workr.git ./workr-git
-    fi
-    new-line
-}
+create-release "sirikon" "workr" "${version}" \
+    "Workr" \
+    "$(cd ./workr-git && git rev-parse HEAD)" \
+    "$(cd ./workr-git && git log --format=%B -n 1 HEAD)"
 
-function run-release {
-    log "Running release..."
-    (cd ./workr-git && ./scripts/release)
-    new-line
-}
+upload-release-file "sirikon" "workr" "${version}" "./out/workr-${version}-linux-amd64.tar.gz"
+upload-release-file "sirikon" "workr" "${version}" "./out/workr-${version}-linux-amd64.deb"
 
-function log {
-    printf "## %s\n" "$1"
-}
-
-function new-line {
-    printf "\n"
-}
-
-main "$@"
+log-newline
+show-latest-github-artifacts "sirikon" "workr"
