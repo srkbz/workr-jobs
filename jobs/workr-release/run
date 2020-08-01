@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export "$(xargs < "../../workr-release.env")"
+export "$(xargs < "../../github-release.env")"
 source "../../scripts.sh"
 
 rm -rf ./out

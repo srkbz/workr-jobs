@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export "$(xargs < "../../github-release.env")"
+source "../../scripts.sh"
+
+rm -rf ./out
+clone-git-repository "https://github.com/sirikon/ourcraft.git" "./ourcraft-git"
+(
+    cd "./docker"
+    docker-compose up --build builder
+    docker cp "$(docker-compose ps -q builder)":/builder/out "../out"
+)
+log-newline
+
+version="$(cat ./out/version)"
+package-tar "./out/bin" "./out/ourcraft-${version}-linux-amd64.tar.gz"
+package-deb "./out/bin" "./out/ourcraft-${version}-linux-amd64.deb" \
+    "ourcraft" \
+    "${version}" \
+    "https://github.com/sirikon/ourcraft"
+
+create-release "sirikon" "ourcraft" "${version}" \
+    "Ourcraft" \
+    "$(cd ./ourcraft-git && git rev-parse HEAD)" \
+    "$(cd ./ourcraft-git && git log --format=%B -n 1 HEAD)"
+
+upload-release-file "sirikon" "ourcraft" "${version}" "./out/ourcraft-${version}-linux-amd64.tar.gz"
+upload-release-file "sirikon" "ourcraft" "${version}" "./out/ourcraft-${version}-linux-amd64.deb"
+
+log-newline
+show-latest-github-artifacts "sirikon" "ourcraft"
